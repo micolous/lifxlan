@@ -11,13 +11,19 @@ from random import randint
 from time import time, sleep
 
 class LifxLAN:
-    def __init__(self, num_lights=None, verbose=False, broadcast_ip=None):
+    def __init__(self, num_lights=None, verbose=False, local_ip=None, broadcast_ip=None):
         self.source_id = randint(0, (2**32)-1)
         self.num_devices = num_lights
         self.num_lights = num_lights
         self.devices = None
         self.lights = None
         self.verbose = verbose
+
+        if local_ip is None:
+            self._local_ip = ''
+        else:
+            self._local_ip = local_ip
+
         if broadcast_ip is None:
             self._broadcast_ip = UDP_BROADCAST_IP
         else:
@@ -157,7 +163,7 @@ class LifxLAN:
         while(sent_msg_count < num_repeats):
             self.sock.sendto(msg.packed_message, (self._broadcast_ip, UDP_BROADCAST_PORT))
             if self.verbose:
-                        print("SEND: " + str(msg))
+                print("SEND: " + str(msg))
             sent_msg_count += 1
             sleep(sleep_interval) # Max num of messages device can handle is 20 per second.
         self.close_socket()
@@ -227,7 +233,7 @@ class LifxLAN:
         self.sock.setsockopt(SOL_SOCKET, SO_BROADCAST, 1)
         self.sock.settimeout(timeout)
         port = UDP_BROADCAST_PORT
-        self.sock.bind(("", port))
+        self.sock.bind((self._local_ip, port))
 
     def close_socket(self):
         self.sock.close()
