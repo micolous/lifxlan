@@ -11,14 +11,18 @@ from random import randint
 from time import time, sleep
 
 class LifxLAN:
-    def __init__(self, num_lights=None, verbose=False):
+    def __init__(self, num_lights=None, verbose=False, broadcast_ip=None):
         self.source_id = randint(0, (2**32)-1)
         self.num_devices = num_lights
         self.num_lights = num_lights
         self.devices = None
         self.lights = None
         self.verbose = verbose
-        
+        if broadcast_ip is None:
+            self._broadcast_ip = UDP_BROADCAST_IP
+        else:
+            self._broadcast_ip = broadcast_ip
+
     ############################################################################
     #                                                                          #
     #                         LAN (Broadcast) API Methods                      #
@@ -122,7 +126,7 @@ class LifxLAN:
             timedout = False
             while not timedout:
                 if not sent:
-                    self.sock.sendto(msg.packed_message, (UDP_BROADCAST_IP, UDP_BROADCAST_PORT))
+                    self.sock.sendto(msg.packed_message, (self._broadcast_ip, UDP_BROADCAST_PORT))
                     sent = True
                     if self.verbose:
                         print("SEND: " + str(msg))
@@ -151,7 +155,7 @@ class LifxLAN:
         sent_msg_count = 0
         sleep_interval = 0.05 if num_repeats > 20 else 0
         while(sent_msg_count < num_repeats):
-            self.sock.sendto(msg.packed_message, (UDP_BROADCAST_IP, UDP_BROADCAST_PORT))
+            self.sock.sendto(msg.packed_message, (self._broadcast_ip, UDP_BROADCAST_PORT))
             if self.verbose:
                         print("SEND: " + str(msg))
             sent_msg_count += 1
@@ -177,7 +181,7 @@ class LifxLAN:
             timedout = False
             while num_devices_seen < self.num_devices and not timedout:
                 if not sent:
-                    self.sock.sendto(msg.packed_message, (UDP_BROADCAST_IP, UDP_BROADCAST_PORT))
+                    self.sock.sendto(msg.packed_message, (self._broadcast_ip, UDP_BROADCAST_PORT))
                     sent = True
                     if self.verbose:
                         print("SEND: " + str(msg))
